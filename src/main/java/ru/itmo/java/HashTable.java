@@ -2,6 +2,7 @@ package ru.itmo.java;
 
 public class HashTable {
     private static final float LOAD_FACTOR = 0.5f;
+    private static final int STEP = 5563;
 
     private Entry[] elements;
     private boolean[] status;
@@ -13,18 +14,18 @@ public class HashTable {
     }
 
     public HashTable(int initialCapacity, float loadFactor) {
-        elements = new Entry[initialCapacity];
-        status = new boolean[initialCapacity];
+        this.elements = new Entry[initialCapacity];
+        this.status = new boolean[initialCapacity];
         this.loadFactor = loadFactor;
     }
 
-    Object put(Object key, Object value) {
+    public Object put(Object key, Object value) {
         if (size > elements.length * loadFactor) {
-            this.ensureCapacity();
+            ensureCapacity();
         }
-        int hc = currentIndex(key);
+        int hc = getCurrentIndex(key);
         if (elements[hc] == null) {
-            hc = newIndex(key);
+            hc = getNewIndex(key);
             if (status[hc]) {
                 status[hc] = false;
             }
@@ -37,16 +38,16 @@ public class HashTable {
         return tmp;
     }
 
-    Object get(Object key) {
-        int hc = currentIndex(key);
+    public Object get(Object key) {
+        int hc = getCurrentIndex(key);
         if (elements[hc] == null) {
             return null;
         }
         return elements[hc].getValue();
     }
 
-    Object remove(Object key) {
-        int hc = currentIndex(key);
+    public Object remove(Object key) {
+        int hc = getCurrentIndex(key);
         if (elements[hc] == null) {
             return null;
         }
@@ -57,40 +58,42 @@ public class HashTable {
         return tmp;
     }
 
-    int size() {
+    public int size() {
         return size;
     }
 
-    int newIndex(Object key) {
-        int hc = (key.hashCode() % elements.length + elements.length) % elements.length;
+    private int getNewIndex(Object key) {
+        int length = elements.length;
+        int hc = (key.hashCode() % length + length) % length;
         for (; elements[hc] != null; ) {
-            hc = (hc + 5563) % elements.length;
+            hc = (hc + STEP) % length;
         }
         return hc;
     }
 
-    int currentIndex(Object key) {
-        int hc = (key.hashCode() % elements.length + elements.length) % elements.length;
+    private int getCurrentIndex(Object key) {
+        int length = elements.length;
+        int hc = (key.hashCode() % length + length) % length;
         for (; status[hc] || elements[hc] != null && !elements[hc].getKey().equals(key); ) {
-            hc = (hc + 5563) % elements.length;
+            hc = (hc + STEP) % length;
         }
         return hc;
     }
 
-    void ensureCapacity() {
-        Entry[] tmp_elements = elements;
-        elements = new Entry[tmp_elements.length * 2];
-        status = new boolean[tmp_elements.length * 2];
+    private void ensureCapacity() {
+        int newLength = elements.length * 2;
+        Entry[] tmpElements = elements;
+        elements = new Entry[newLength];
+        status = new boolean[newLength];
         size = 0;
-        for (Entry element : tmp_elements) {
+        for (Entry element : tmpElements) {
             if (element != null) {
                 this.put(element.key, element.value);
             }
         }
     }
 
-
-    private static class Entry {
+    private static final class Entry {
         private Object key;
         private Object value;
 
@@ -107,5 +110,4 @@ public class HashTable {
             return value;
         }
     }
-
 }
